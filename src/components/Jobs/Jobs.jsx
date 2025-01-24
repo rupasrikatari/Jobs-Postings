@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Share2, Bookmark, ArrowUpDown, Building2, MapPin, Link, Mail, X, Calendar, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { jobListings, levelDescriptions } from '../../data/data';
+import { jobListings, experienceLevelDescriptions } from '../../data/data';
 import {
   JobsContainer,
   JobCard,
@@ -12,6 +12,8 @@ import {
   LocationInfo,
   LocationWrapper,
   RequirementsList,
+  SkillsList,
+  SkillChip,
   ButtonsContainer,
   IconButton,
   SaveButton,
@@ -87,7 +89,7 @@ const Jobs = () => {
     try {
       setIsLoading(true);
       const sortedByDate = [...jobListings].sort((a, b) => {
-        return new Date(b.postDate) - new Date(a.postDate);
+        return new Date(b.createdAt) - new Date(a.createdAt);
       });
       setSortedJobs(sortedByDate);
       setIsLoading(false);
@@ -113,7 +115,11 @@ const Jobs = () => {
       if (isJobSaved) {
         return prev.filter(savedJob => savedJob.id !== job.id);
       } else {
-        return [...prev, job];
+        return [...prev, {
+          ...job,
+          postDate: job.createdAt,
+          locations: [job.location]
+        }];
       }
     });
   };
@@ -151,7 +157,7 @@ const Jobs = () => {
     setTooltipInfo({
       show: true,
       level,
-      content: levelDescriptions[level] || `${level} level position`
+      content: experienceLevelDescriptions[level] || `${level} position`
     });
   };
 
@@ -179,7 +185,7 @@ const Jobs = () => {
 
   const handleEmailShare = (jobId) => {
     const job = sortedJobs.find(j => j.id === jobId);
-    const subject = encodeURIComponent(`Job Opportunity: ${job.title}`);
+    const subject = encodeURIComponent(`Job Opportunity: ${job.jobTitle}`);
     const body = encodeURIComponent(`Check out this job opportunity at ${job.company}:\n\n${window.location.origin}/jobs/${jobId}`);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
     setShareMenuState({ isOpen: false, jobId: null });
@@ -191,7 +197,7 @@ const Jobs = () => {
   };
 
   const renderJobCard = (job) => {
-    const postDate = new Date(job.postDate).toLocaleDateString('en-US', {
+    const postDate = new Date(job.createdAt).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -203,7 +209,7 @@ const Jobs = () => {
       <JobCard key={job.id}>
         <JobHeader>
           <div>
-            <JobTitle>{job.title}</JobTitle>
+            <JobTitle>{job.jobTitle}</JobTitle>
             <CompanyInfo>
               <CompanyIcon>
                 <Building2 size={18} />
@@ -217,17 +223,17 @@ const Jobs = () => {
             <LocationInfo>
               <LocationWrapper>
                 <MapPin size={18} />
-                {job.locations.join(', ')}
+                {job.location}
               </LocationWrapper>
               <TooltipContainer>
                 <EnhancedBadge
-                  onMouseEnter={() => handleMouseEnter(job.level)}
+                  onMouseEnter={() => handleMouseEnter(job.experience)}
                   onMouseLeave={handleMouseLeave}
                 >
                   <ArrowUpDown size={16} />
-                  {job.level}
+                  {job.experience}
                 </EnhancedBadge>
-                {tooltipInfo.show && tooltipInfo.level === job.level && (
+                {tooltipInfo.show && tooltipInfo.level === job.experience && (
                   <TooltipContent>
                     <TooltipTitle>{tooltipInfo.level}</TooltipTitle>
                     <TooltipText>{tooltipInfo.content}</TooltipText>
@@ -267,10 +273,23 @@ const Jobs = () => {
           </ButtonsContainer>
         </JobHeader>
         <RequirementsList>
-          {job.requirements.map((requirement, index) => (
-            <li key={index}>{requirement}</li>
-          ))}
+          <strong>Skills Required:</strong>
         </RequirementsList>
+        <SkillsList>
+          {job.skills.map((skill, index) => (
+            <SkillChip key={index}>{skill}</SkillChip>
+          ))}
+        </SkillsList>
+        <div style={{ 
+          padding: '0 15px', 
+          marginBottom: '10px',
+          maxHeight: '100px',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}>
+          <strong>Job Description:</strong>
+          <p>{job.description}</p>
+        </div>
         <LearnMoreButton onClick={() => handleApplyClick(job.id)}>
           Apply Now
         </LearnMoreButton>

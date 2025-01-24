@@ -666,3 +666,27 @@ export const CartButton = styled.button`
     background-color: #0b7dda;
   }
 `;
+export const SkillsList = styled.ul`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 0;
+  list-style: none;
+`;
+
+export const SkillChip = styled.li`
+  background-color: #f0f0f0;
+  color: #333;
+  border-radius: 16px;
+  padding: 4px 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: default;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #e0e0e0;
+  }
+`;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { X, Building2, MapPin, Calendar } from "lucide-react"
+import { X, Building2, MapPin, Calendar, List } from "lucide-react"
 import {
   CartContainer,
   CartHeader,
@@ -9,8 +9,6 @@ import {
   SavedJobCard,
   JobHeader,
   JobTitle,
-  CompanyInfo,
-  LocationInfo,
   RemoveButton,
   ApplyButton,
   HeaderControls,
@@ -43,6 +41,7 @@ const Cart = () => {
   })
 
   const [isPopupOpen, setIsPopupOpen] = useState(false)
+  const [selectedJob, setSelectedJob] = useState(null)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -60,7 +59,8 @@ const Cart = () => {
     setSavedJobs(updatedSavedJobs)
   }
 
-  const handleApplyClick = () => {
+  const handleApplyClick = (job) => {
+    setSelectedJob(job)
     setIsPopupOpen(true)
   }
 
@@ -74,7 +74,7 @@ const Cart = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    alert("Your application has been submitted successfully!")
+    alert(`Your application for ${selectedJob.jobTitle} has been submitted successfully!`)
     setIsPopupOpen(false)
     setFormData({
       name: "",
@@ -83,9 +83,15 @@ const Cart = () => {
       percentage: "",
       college: "",
     })
+    setSelectedJob(null)
   }
 
-  if (savedJobs.length === 0) {
+  const handleClosePopup = () => {
+    setIsPopupOpen(false)
+    setSelectedJob(null)
+  }
+
+  if (!savedJobs || savedJobs.length === 0) {
     return (
       <CartContainer>
         <CartHeader>
@@ -110,45 +116,83 @@ const Cart = () => {
       </CartHeader>
 
       {savedJobs.map((job) => {
-        const postDate = new Date(job.postDate).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        })
+        const postDate = job.postDate 
+          ? new Date(job.postDate).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            }) 
+          : "Date Not Available"
 
         return (
           <SavedJobCard key={job.id}>
             <JobHeader>
               <JobDetails>
-                <JobTitle>{job.title}</JobTitle>
+                <JobTitle>{job.jobTitle}</JobTitle>
                 <JobInfoItem>
                   <Building2 size={18} />
                   <span>{job.company}</span>
                 </JobInfoItem>
                 <JobInfoItem>
                   <MapPin size={18} />
-                  <span>{job.locations.join(", ")}</span>
+                  <span>{job.location}</span>
                 </JobInfoItem>
                 <JobInfoItem>
                   <Calendar size={16} />
                   <DateBadge>{postDate}</DateBadge>
+                </JobInfoItem>
+                <JobInfoItem>
+                  <List size={16} />
+                  <span>{job.experience} Experience</span>
                 </JobInfoItem>
               </JobDetails>
               <RemoveButton onClick={() => removeFromCart(job.id)} aria-label="Remove job">
                 <X size={20} />
               </RemoveButton>
             </JobHeader>
-            <ApplyButton onClick={handleApplyClick}>Apply Now</ApplyButton>
+            <div style={{ padding: '10px 15px' }}>
+              <strong>Skills Required:</strong>
+              <div style={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: '5px', 
+                marginTop: '5px' 
+              }}>
+                {job.skills.map((skill, index) => (
+                  <span 
+                    key={index} 
+                    style={{
+                      backgroundColor: '#f0f0f0', 
+                      padding: '3px 8px', 
+                      borderRadius: '15px', 
+                      fontSize: '0.8em'
+                    }}
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div style={{ 
+              padding: '10px 15px', 
+              maxHeight: '150px', 
+              overflow: 'hidden', 
+              textOverflow: 'ellipsis' 
+            }}>
+              <strong>Job Description:</strong>
+              <p>{job.description}</p>
+            </div>
+            <ApplyButton onClick={() => handleApplyClick(job)}>Apply Now</ApplyButton>
           </SavedJobCard>
         )
       })}
 
-      {isPopupOpen && (
+      {isPopupOpen && selectedJob && (
         <PopupOverlay>
           <PopupContent>
             <PopupHeader>
-              <PopupTitle>Apply for Position</PopupTitle>
-              <CloseButton onClick={() => setIsPopupOpen(false)}>
+              <PopupTitle>Apply for {selectedJob.jobTitle}</PopupTitle>
+              <CloseButton onClick={handleClosePopup}>
                 <X size={24} />
               </CloseButton>
             </PopupHeader>
